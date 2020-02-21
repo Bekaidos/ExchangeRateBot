@@ -1,43 +1,64 @@
-import org.jsoup.Jsoup;
+import com.google.gson.Gson;
 import java.io.IOException;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
+import java.net.URL;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.util.Map;
 
 public class ExchangeRate {
-    private Document document;
 
     public ExchangeRate(){
-        connect();
+
     }
 
-    private void connect(){
-        try{
-            document = Jsoup.connect("https://nationalbank.kz/index.cfm?docid=747&switch=rus").get();
-        } catch (IOException e){
+
+    public Response getCurrency(String currency) {
+
+    String output, KZTResponse = "", date_insert  = "";
+    StringBuilder response = new StringBuilder();
+        try {
+
+            URL url = new URL("http://localhost:8080/exchange/service");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            String input = "{\"currency\": \"" + currency + "\" }";
+
+            OutputStream os = conn.getOutputStream();
+            os.write(input.getBytes());
+            os.flush();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    (conn.getInputStream())));
+
+
+            while ((output = br.readLine()) != null) {
+                response.append(output.trim());
+            }
+
+            Gson gson= new Gson();
+            Map map = gson.fromJson(response.toString(), Map.class);
+            KZTResponse = map.get("kztresponse").toString();
+            date_insert = map.get("date_insert").toString();
+
+            conn.disconnect();
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return new Response(KZTResponse, date_insert);
     }
 
-    public String getUSD(){
-        Elements elements = document.getElementsByClass("gen7");
-        String info = elements.text();
-        int index = info.indexOf("1 ДОЛЛАР США"); //1 доллар сша usd / kzt 378.8
-        info = info.substring(index, index+30);
-        return info;
-    }
-    public String getEUR(){
-        Elements elements = document.getElementsByClass("gen7");
-        String info = elements.text();
-        int index = info.indexOf("1 ЕВРО"); //1 евро eur / kzt 417.32
-        info = info.substring(index, index+25);
-        return info;
-    }
-    public String getRUB(){
-        Elements elements = document.getElementsByClass("gen7");
-        String info = elements.text();
-        int index = info.indexOf("1 РОССИЙСКИЙ РУБЛЬ");//1 российский рубль rub / kzt 6.02
-        info = info.substring(index, index+35);
-        return info;
-    }
+
+
 
 }

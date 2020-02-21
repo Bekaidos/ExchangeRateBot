@@ -57,24 +57,24 @@ public class Bot extends TelegramLongPollingBot {
             return getInfoExchangeRateUSD();
         }
         if (msg.equals("EUR")){
-            return getInfoExchangeRateEUR();
+            return getInfoExchangeRateEUR() ;
         }
         if (msg.equals("RUB")){
-            return getInfoExchangeRateRUB();
+            return getInfoExchangeRateRUB() ;
         }
         return msg;
     }
 
     public String getInfoExchangeRateUSD(){
-        String info = exchangeRate.getUSD();
-        return info;
+        Response info = exchangeRate.getCurrency("USD");
+        return  info.getDate_insert()+ "\n 1 USD = " + info.getKZTResponse() + " KZT";
     }
     public String getInfoExchangeRateEUR(){
-        String info = exchangeRate.getEUR();
-        return info;
+        Response info = exchangeRate.getCurrency("EUR");
+        return info.getDate_insert()+"\n 1 EUR = "+ info.getKZTResponse() + " KZT";
     }
     public String getInfoExchangeRateRUB(){
-        String info = exchangeRate.getRUB();
-        return info;
+        Response info = exchangeRate.getCurrency("RUB");
+        return info.getDate_insert()+"\n 1 RUB = "+ info.getKZTResponse() + " KZT";
     }
 }
